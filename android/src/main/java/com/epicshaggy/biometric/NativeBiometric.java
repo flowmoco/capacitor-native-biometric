@@ -294,6 +294,7 @@ public class NativeBiometric extends Plugin {
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                     .setRandomizedEncryptionRequired(false)
+                    .setUserAuthenticationRequired(true)
                     .build()
             );
             return generator.generateKey();
