@@ -212,7 +212,7 @@ public class NativeBiometric: CAPPlugin {
         let query: [String: Any] = [kSecClass as String: kSecClassInternetPassword,
                                     kSecAttrAccount as String: credentials.username,
                                     kSecAttrServer as String: server,
-                                    kSecAttrAccessControl: accessControl,
+                                    kSecAttrAccessControl as String: accessControl,
                                     kSecValueData as String: credentials.password.data(using: .utf8)!]
         
         let status = SecItemAdd(query as CFDictionary, nil)
