@@ -162,7 +162,7 @@ public class NativeBiometric: CAPPlugin {
     
     @objc func setCredentials(_ call: CAPPluginCall){
         
-        guard let server = call.getString("server"), let username = call.getString("username"), let password = call.getString("password") else {
+        guard let server = call.getString("server"), let username = call.getString("username"), let biometricLocked = call.getBool("biometricLocked"), let password = call.getString("password") else {
             call.reject("Missing properties")
             return;
         }
@@ -170,7 +170,11 @@ public class NativeBiometric: CAPPlugin {
         let credentials = Credentials(username: username, password: password)
         
         do{
-            try storeCredentialsInKeychain(credentials, server)
+            if biometricLocked {
+              try storeCredentialsInKeychainWithBiometrics(credentials, server)
+            } else {
+              try storeCredentialsInKeychain(credentials, server)
+            }
             call.resolve()
         } catch KeychainError.duplicateItem {
             do {
@@ -198,7 +202,25 @@ public class NativeBiometric: CAPPlugin {
         }
     }
     
-    
+    // Store user Credentials behind biometrics in Keychain
+    func storeCredentialsInKeychainWithBiometrics(_ credentials: Credentials, _ server: String) throws {
+        let accessControl = SecAccessControlCreateWithFlags(
+          nil,
+          kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+          .userPresence,
+          nil)!
+        let query: [String: Any] = [kSecClass as String: kSecClassInternetPassword,
+                                    kSecAttrAccount as String: credentials.username,
+                                    kSecAttrServer as String: server,
+                                    kSecAttrAccessControl: accessControl,
+                                    kSecValueData as String: credentials.password.data(using: .utf8)!]
+        
+        let status = SecItemAdd(query as CFDictionary, nil)
+        
+        guard status != errSecDuplicateItem else { throw KeychainError.duplicateItem }
+        guard status == errSecSuccess else { throw KeychainError.unhandledError(status: status) }
+    }
+
     // Store user Credentials in Keychain
     func storeCredentialsInKeychain(_ credentials: Credentials, _ server: String) throws {
         let query: [String: Any] = [kSecClass as String: kSecClassInternetPassword,

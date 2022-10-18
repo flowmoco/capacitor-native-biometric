@@ -49,6 +49,11 @@ export interface SetCredentialOptions {
   username: string;
   password: string;
   server: string;
+  /**
+   * Sets access controls on keychain key to only allow access to the item after using biometric authentication
+   * @default false
+   */
+  biometricLocked: boolean;
 }
 
 export interface DeleteCredentialOptions {
@@ -62,7 +67,7 @@ export interface NativeBiometricPlugin {
 
   getCredentials(options: GetCredentialOptions): Promise<Credentials>;
 
-  setCredentials(options: SetCredentialOptions): Promise<any>;
+  setCredentials({ username, password, server, biometricLocked = false }: SetCredentialOptions): Promise<any>;
 
   deleteCredentials(options: DeleteCredentialOptions): Promise<any>;
 }
